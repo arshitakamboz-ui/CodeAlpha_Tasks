@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Order Placed</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">My Store</a>
+  </nav>
+  <div class="container">
+    <div class="success-box">
+      <h1>✅ Order Placed!</h1>
+      <p>Order ID: <%= order._id %></p>
+      <p><strong>Total: ₹<%= order.total %></strong></p>
+      <br>
+      <a href="/" class="btn">Continue Shopping</a>
+    </div>
+  </div>
+</body>
+</html>

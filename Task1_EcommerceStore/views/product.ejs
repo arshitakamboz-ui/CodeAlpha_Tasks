@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= product.name %></title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">My Store</a>
+    <div class="links">
+      <a href="/cart">🛒 Cart<% if (cartCount > 0) { %><span class="cart-badge"><%= cartCount %></span><% } %></a>
+      <% if (session.user) { %>
+        <span>Hi, <%= session.user.name %></span>
+        <a href="/logout">Logout</a>
+      <% } else { %>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+      <% } %>
+    </div>
+  </nav>
+  <div class="container">
+    <a href="/" class="back-link">&larr; Back to store</a>
+    <div class="detail-box">
+      <img src="<%= product.image %>" alt="<%= product.name %>">
+      <h1><%= product.name %></h1>
+      <div class="price-large">₹<%= product.price %></div>
+      <form action="/cart/add/<%= product._id %>" method="POST">
+        <div class="qty-selector">
+          <span>Quantity:</span>
+          <input type="number" name="quantity" value="1" min="1" max="10">
+        </div>
+        <button type="submit">Add to Cart</button>
+      </form>
+    </div>
+  </div>
+  <script src="/toast.js"></script>
+</body>
+</html>

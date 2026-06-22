@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Your Cart</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">My Store</a>
+    <div class="links">
+      <a href="/cart">🛒 Cart<% if (cartCount > 0) { %><span class="cart-badge"><%= cartCount %></span><% } %></a>
+      <% if (session.user) { %>
+        <span>Hi, <%= session.user.name %></span>
+        <a href="/logout">Logout</a>
+      <% } else { %>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+      <% } %>
+    </div>
+  </nav>
+  <div class="container">
+    <a href="/" class="back-link">&larr; Back to store</a>
+    <h1>Your Cart</h1>
+
+    <% if (cart.length === 0) { %>
+      <p>Your cart is empty.</p>
+    <% } else { %>
+      <% cart.forEach(function(item, index) { %>
+        <div class="cart-item">
+          <div class="cart-item-info">
+            <img src="<%= item.image %>" alt="<%= item.name %>">
+            <span><%= item.name %> — ₹<%= item.price %> each</span>
+          </div>
+          <div class="cart-item-controls">
+            <form action="/cart/decrease/<%= index %>" method="POST">
+              <button type="submit" class="qty-btn">−</button>
+            </form>
+            <span><%= item.quantity %></span>
+            <form action="/cart/increase/<%= index %>" method="POST">
+              <button type="submit" class="qty-btn">+</button>
+            </form>
+            <form action="/cart/remove/<%= index %>" method="POST">
+              <button type="submit" class="btn-secondary">Remove</button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+      <div class="total-box">
+        <span>Total: ₹<%= total %></span>
+        <a href="/checkout" class="btn">Checkout</a>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>
