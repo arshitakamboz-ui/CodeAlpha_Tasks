@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const User = require('./models/User');
 const Post = require('./models/Post');
@@ -14,14 +16,30 @@ const Story = require('./models/Story');
 const app = express();
 const PORT = 3000;
 
-mongoose.connect('mongodb+srv://a4155361_db_user:nHcxglrqTbay6MeO@cluster0.ut9jfrv.mongodb.net/socialmedia?appName=Cluster0')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://a4155361_db_user:nHcxglrqTbay6MeO@cluster0.ut9jfrv.mongodb.net/socialmedia?appName=Cluster0')
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// Cloudinary storage for multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    const isVideo = file.mimetype.startsWith('video/');
+    return {
+      folder: 'socialapp',
+      resource_type: isVideo ? 'video' : 'image',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'webm'],
+    };
+  }
+});
+
 const upload = multer({ storage });
 
 app.set('view engine', 'ejs');
@@ -81,28 +99,23 @@ app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/login'
 app.get('/', requireLogin, async (req, res) => {
   const currentUser = await User.findById(req.session.user.id);
   const following = [...currentUser.following, currentUser._id];
-
   const posts = await Post.find({ author: { $in: following } })
     .populate('author')
     .sort({ createdAt: -1 });
-
   const stories = await Story.find({ author: { $in: following } })
     .populate('author')
     .sort({ createdAt: -1 });
-
   const notifCount = await Notification.find({ recipient: req.session.user.id, read: false }).countDocuments();
-
-  // Suggested users — people not followed, not self
-  const suggestedUsers = await User.find({
-    _id: { $nin: [...following] }
-  }).limit(5);
-
+  const suggestedUsers = await User.find({ _id: { $nin: [...following] } }).limit(5);
   res.render('feed', { posts, currentUser, notifCount, stories, suggestedUsers, timeAgo });
 });
 
 app.post('/story/create', requireLogin, upload.single('image'), async (req, res) => {
   if (!req.file) return res.redirect('/');
-  const story = new Story({ author: req.session.user.id, image: '/uploads/' + req.file.filename });
+  const story = new Story({
+    author: req.session.user.id,
+    image: req.file.path
+  });
   await story.save();
   res.redirect('/');
 });
@@ -128,16 +141,20 @@ app.post('/story/:id/delete', requireLogin, async (req, res) => {
 app.post('/post/create', requireLogin, upload.single('media'), async (req, res) => {
   let image = null, video = null, mediaType = null;
   if (req.file) {
-    const ext = path.extname(req.file.originalname).toLowerCase();
-    if (['.mp4', '.mov', '.avi', '.webm'].includes(ext)) {
-      video = '/uploads/' + req.file.filename;
+    const isVideo = req.file.mimetype.startsWith('video/');
+    if (isVideo) {
+      video = req.file.path;
       mediaType = 'video';
     } else {
-      image = '/uploads/' + req.file.filename;
+      image = req.file.path;
       mediaType = 'image';
     }
   }
-  const post = new Post({ author: req.session.user.id, content: req.body.content, image, video, mediaType });
+  const post = new Post({
+    author: req.session.user.id,
+    content: req.body.content,
+    image, video, mediaType
+  });
   await post.save();
   res.redirect('/');
 });
@@ -216,7 +233,7 @@ app.get('/profile/:username', requireLogin, async (req, res) => {
 
 app.post('/profile/edit', requireLogin, upload.single('profilePhoto'), async (req, res) => {
   const updates = { name: req.body.name, bio: req.body.bio };
-  if (req.file) updates.profilePhoto = '/uploads/' + req.file.filename;
+  if (req.file) updates.profilePhoto = req.file.path;
   await User.findByIdAndUpdate(req.session.user.id, updates);
   req.session.user.name = req.body.name;
   const user = await User.findById(req.session.user.id);
