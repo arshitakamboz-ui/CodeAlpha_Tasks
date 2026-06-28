@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>#<%= tag %> • SocialApp</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">SocialApp</a>
+    <div class="nav-links">
+      <a href="/">🏠</a>
+      <a href="/explore">🔭</a>
+      <a href="/search">🔍</a>
+      <a href="/notifications">🔔</a>
+      <a href="/profile/<%= currentUser.username %>">
+        <img src="<%= currentUser.profilePhoto %>" class="avatar-sm" style="border: 2px solid #6c5ce7;">
+      </a>
+    </div>
+  </nav>
+
+  <div class="explore-container">
+    <div style="margin-bottom:24px;">
+      <h1 style="font-size:24px;">#<%= tag %></h1>
+      <p style="color:#8e8e8e; font-size:14px;"><%= posts.length %> posts</p>
+    </div>
+
+    <% if (posts.length === 0) { %>
+      <p class="empty-msg">No posts with #<%= tag %> yet.</p>
+    <% } %>
+
+    <div class="explore-grid">
+      <% posts.forEach(function(post) { %>
+        <a href="/post/<%= post._id %>" class="explore-item">
+          <% if (post.mediaType === 'video') { %>
+            <div class="explore-video-thumb">
+              <video src="<%= post.video %>" muted></video>
+              <span class="reel-icon">▶</span>
+            </div>
+          <% } else if (post.image) { %>
+            <img src="<%= post.image %>" alt="">
+          <% } else { %>
+            <div class="explore-text-thumb"><%= post.content.substring(0, 80) %></div>
+          <% } %>
+          <div class="explore-overlay">
+            <span>❤️ <%= post.likes.length %></span>
+          </div>
+        </a>
+      <% }); %>
+    </div>
+  </div>
+</body>
+</html>

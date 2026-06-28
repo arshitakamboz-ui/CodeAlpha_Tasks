@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Saved Posts</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">✨ SocialApp</a>
+    <div class="nav-links">
+      <a href="/search">🔍</a>
+      <a href="/notifications">🔔</a>
+      <a href="/profile/<%= currentUser.username %>">👤 <%= currentUser.name %></a>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="search-container">
+    <h1>🔖 Saved Posts</h1>
+    <% if (savedPosts.length === 0) { %>
+      <p class="empty-msg">No saved posts yet. Tap the bookmark icon on any post to save it.</p>
+    <% } %>
+    <% savedPosts.forEach(function(post) { %>
+      <div class="post-card">
+        <div class="post-header">
+          <img src="<%= post.author.profilePhoto %>" class="avatar-sm">
+          <div>
+            <a href="/profile/<%= post.author.username %>" class="post-author"><%= post.author.name %></a>
+            <span class="post-username">@<%= post.author.username %></span>
+          </div>
+        </div>
+        <p class="post-content"><%= post.content %></p>
+        <% if (post.image) { %>
+          <img src="<%= post.image %>" class="post-image">
+        <% } %>
+        <% if (post.mediaType === 'video') { %>
+          <video src="<%= post.video %>" controls class="post-image"></video>
+        <% } %>
+        <div class="post-actions">
+          <a href="/post/<%= post._id %>" class="action-btn">💬 View Post</a>
+          <form action="/post/<%= post._id %>/save" method="POST" style="display:inline">
+            <button type="submit" class="action-btn">🔖 Unsave</button>
+          </form>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+</body>
+</html>

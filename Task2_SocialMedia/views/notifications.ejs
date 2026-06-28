@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Notifications</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">✨ SocialApp</a>
+    <div class="nav-links">
+      <a href="/search">🔍</a>
+      <a href="/notifications">🔔</a>
+      <a href="/profile/<%= currentUser.username %>">👤 <%= currentUser.name %></a>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="notif-container">
+    <h1>Notifications</h1>
+    <% if (notifications.length === 0) { %>
+      <p class="empty-msg">No notifications yet.</p>
+    <% } %>
+    <% notifications.forEach(function(notif) { %>
+      <div class="notif-card <%= notif.read ? '' : 'unread' %>">
+        <img src="<%= notif.sender.profilePhoto %>" class="avatar-sm">
+        <div class="notif-text">
+          <strong><%= notif.sender.name %></strong>
+          <% if (notif.type === 'like') { %>
+            liked your post
+          <% } else if (notif.type === 'comment') { %>
+            commented on your post
+          <% } else if (notif.type === 'follow') { %>
+            started following you
+          <% } %>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+</body>
+</html>

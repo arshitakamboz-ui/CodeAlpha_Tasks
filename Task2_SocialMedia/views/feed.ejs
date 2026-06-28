@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SocialApp</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">SocialApp</a>
+    <div class="nav-links">
+      <a href="/">🏠</a>
+      <a href="/explore">🔭</a>
+      <a href="/bookmarks">🔖</a>
+      <a href="/search">🔍</a>
+      <a href="/notifications">
+        🔔<% if (notifCount > 0) { %><span class="badge"><%= notifCount %></span><% } %>
+      </a>
+      <a href="/profile/<%= currentUser.username %>">
+        <img src="<%= currentUser.profilePhoto %>" class="avatar-sm" style="border: 2px solid #6c5ce7;">
+      </a>
+    </div>
+  </nav>
+
+  <div class="feed-container">
+    <div class="feed-left">
+
+      <!-- STORIES -->
+      <div class="stories-bar">
+        <div class="story-bubble add-story">
+          <form action="/story/create" method="POST" enctype="multipart/form-data">
+            <label for="storyUpload">
+              <img src="<%= currentUser.profilePhoto %>" class="story-avatar">
+              <span class="story-plus">+</span>
+            </label>
+            <input type="file" id="storyUpload" name="image" accept="image/*" style="display:none" onchange="this.form.submit()">
+          </form>
+          <span>Your Story</span>
+        </div>
+        <% stories.forEach(function(story) { %>
+          <a href="/story/<%= story._id %>" class="story-bubble">
+            <div class="story-ring <%= story.viewers.some(function(id){ return id.toString() === currentUser._id.toString(); }) ? 'seen' : '' %>">
+              <img src="<%= story.author.profilePhoto %>" class="story-avatar">
+            </div>
+            <span><%= story.author.name.split(' ')[0] %></span>
+          </a>
+        <% }); %>
+      </div>
+
+      <!-- CREATE POST -->
+      <div class="create-post-box">
+        <form action="/post/create" method="POST" enctype="multipart/form-data">
+          <div class="create-post-top">
+            <img src="<%= currentUser.profilePhoto %>" class="avatar-sm">
+            <textarea name="content" placeholder="Share something... use #hashtags!" required></textarea>
+          </div>
+
+          <div id="mediaPreview" style="display:none; padding: 0 0 12px 52px;">
+            <div style="position:relative; display:inline-block;">
+              <img id="imagePreview" style="max-height:200px; border-radius:8px; display:none;">
+              <video id="videoPreview" controls style="max-height:200px; border-radius:8px; display:none;"></video>
+              <button type="button" onclick="clearMedia()" style="position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px;">✕</button>
+            </div>
+          </div>
+
+          <div class="create-post-bottom">
+            <label for="mediaUpload">📷 Photo/Video</label>
+            <input type="file" id="mediaUpload" name="media" accept="image/*,video/*" style="display:none" onchange="previewMedia(this)">
+            <button type="submit">Share</button>
+          </div>
+        </form>
+      </div>
+
+      <% if (posts.length === 0) { %>
+        <div class="empty-feed">
+          <p>Your feed is empty. Follow people or create your first post!</p>
+        </div>
+      <% } %>
+
+      <% posts.forEach(function(post) { %>
+        <div class="post-card">
+          <div class="post-header">
+            <img src="<%= post.author.profilePhoto %>" class="avatar-sm">
+            <div class="post-header-right">
+              <a href="/profile/<%= post.author.username %>" class="post-author"><%= post.author.name %></a>
+              <span class="post-username">@<%= post.author.username %> · <%= timeAgo(post.createdAt) %></span>
+            </div>
+            <% if (post.author._id.toString() === currentUser._id.toString()) { %>
+              <form action="/post/<%= post._id %>/delete" method="POST" onsubmit="return confirm('Delete this post?')">
+                <button type="submit" class="action-btn delete-btn" title="Delete">🗑️</button>
+              </form>
+            <% } %>
+          </div>
+
+          <% if (post.mediaType === 'video') { %>
+            <video src="<%= post.video %>" controls class="post-image"></video>
+          <% } else if (post.image) { %>
+            <img src="<%= post.image %>" class="post-image">
+          <% } %>
+
+          <div class="post-actions">
+            <form action="/post/<%= post._id %>/like" method="POST" style="display:inline">
+              <button type="submit" class="action-btn" title="Like">
+                <% if (post.likes.some(function(id){ return id.toString() === currentUser._id.toString(); })) { %>❤️<% } else { %>🤍<% } %>
+              </button>
+            </form>
+            <a href="/post/<%= post._id %>" class="action-btn" title="Comment">💬</a>
+            <form action="/post/<%= post._id %>/save" method="POST" style="display:inline; margin-left:auto;">
+              <button type="submit" class="action-btn" title="Save">
+                <% if (currentUser.savedPosts && currentUser.savedPosts.some(function(id){ return id.toString() === post._id.toString(); })) { %>🔖<% } else { %>🏷️<% } %>
+              </button>
+            </form>
+          </div>
+
+          <div class="like-count"><%= post.likes.length %> likes</div>
+          <div class="post-content">
+            <strong><a href="/profile/<%= post.author.username %>" style="text-decoration:none; color:inherit;"><%= post.author.username %></a></strong>
+            <%- post.content.replace(/#(\w+)/g, '<a href="/hashtag/$1" class="hashtag">#$1</a>') %>
+          </div>
+          <a href="/post/<%= post._id %>" class="post-time">View all comments</a>
+        </div>
+      <% }); %>
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="feed-right">
+      <div class="sidebar-profile">
+        <img src="<%= currentUser.profilePhoto %>" class="avatar-md">
+        <div class="info">
+          <strong><%= currentUser.username %></strong>
+          <span><%= currentUser.name %></span>
+        </div>
+        <a href="/logout" class="sidebar-switch">Log out</a>
+      </div>
+
+      <div class="sidebar-nav">
+        <a href="/"><span>🏠</span> Home</a>
+        <a href="/explore"><span>🔭</span> Explore</a>
+        <a href="/notifications"><span>🔔</span> Notifications</a>
+        <a href="/bookmarks"><span>🔖</span> Saved</a>
+        <a href="/search"><span>🔍</span> Search People</a>
+        <a href="/profile/<%= currentUser.username %>"><span>👤</span> Profile</a>
+      </div>
+
+      <% if (suggestedUsers.length > 0) { %>
+        <div class="suggested-box">
+          <div class="suggested-title">
+            <span>Suggested for you</span>
+            <a href="/search">See all</a>
+          </div>
+          <% suggestedUsers.forEach(function(user) { %>
+            <div class="suggested-user">
+              <a href="/profile/<%= user.username %>" style="display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; flex:1;">
+                <img src="<%= user.profilePhoto %>" class="avatar-sm">
+                <div>
+                  <strong style="font-size:13px; display:block;"><%= user.username %></strong>
+                  <span style="font-size:11px; color:#8e8e8e;"><%= user.name %></span>
+                </div>
+              </a>
+              <form action="/follow/<%= user._id %>" method="POST">
+                <button type="submit" class="follow-btn">Follow</button>
+              </form>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <script>
+    function previewMedia(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const imagePreview = document.getElementById('imagePreview');
+      const videoPreview = document.getElementById('videoPreview');
+      const mediaPreview = document.getElementById('mediaPreview');
+      const url = URL.createObjectURL(file);
+      if (file.type.startsWith('video/')) {
+        imagePreview.style.display = 'none';
+        videoPreview.src = url;
+        videoPreview.style.display = 'block';
+      } else {
+        videoPreview.style.display = 'none';
+        imagePreview.src = url;
+        imagePreview.style.display = 'block';
+      }
+      mediaPreview.style.display = 'block';
+    }
+
+    function clearMedia() {
+      document.getElementById('mediaUpload').value = '';
+      document.getElementById('imagePreview').style.display = 'none';
+      document.getElementById('videoPreview').style.display = 'none';
+      document.getElementById('mediaPreview').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

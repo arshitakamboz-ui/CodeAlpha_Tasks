@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Explore</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">✨ SocialApp</a>
+    <div class="nav-links">
+      <a href="/explore" style="color:#6c5ce7; font-weight:700;">🔭 Explore</a>
+      <a href="/search">🔍</a>
+      <a href="/notifications">🔔</a>
+      <a href="/profile/<%= currentUser.username %>">👤 <%= currentUser.name %></a>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="explore-container">
+    <h1>Explore</h1>
+    <div class="explore-grid">
+      <% posts.forEach(function(post) { %>
+        <a href="/post/<%= post._id %>" class="explore-item">
+          <% if (post.mediaType === 'video') { %>
+            <div class="explore-video-thumb">
+              <video src="<%= post.video %>" muted></video>
+              <span class="reel-icon">▶</span>
+            </div>
+          <% } else if (post.image) { %>
+            <img src="<%= post.image %>" alt="">
+          <% } else { %>
+            <div class="explore-text-thumb"><%= post.content.substring(0, 80) %></div>
+          <% } %>
+          <div class="explore-overlay">
+            <span>❤️ <%= post.likes.length %></span>
+          </div>
+        </a>
+      <% }); %>
+    </div>
+  </div>
+</body>
+</html>

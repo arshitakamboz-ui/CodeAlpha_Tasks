@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= profileUser.username %> • SocialApp</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">SocialApp</a>
+    <div class="nav-links">
+      <a href="/">🏠</a>
+      <a href="/explore">🔭</a>
+      <a href="/bookmarks">🔖</a>
+      <a href="/search">🔍</a>
+      <a href="/notifications">🔔</a>
+      <a href="/profile/<%= currentUser.username %>">
+        <img src="<%= currentUser.profilePhoto %>" class="avatar-sm" style="border: 2px solid #6c5ce7;">
+      </a>
+    </div>
+  </nav>
+
+  <div class="profile-container">
+    <div class="profile-header">
+      <div class="profile-photo-wrap">
+        <img src="<%= profileUser.profilePhoto %>" class="avatar-lg" id="mainProfilePhoto">
+      </div>
+      <div class="profile-info">
+        <div class="profile-top">
+          <h1><%= profileUser.username %></h1>
+          <% if (isOwnProfile) { %>
+            <a href="/" class="btn-outline" style="margin-right:8px;">+ New Post</a>
+            <button onclick="document.getElementById('editModal').style.display='flex'" class="btn-outline">Edit Profile</button>
+          <% } else { %>
+            <form action="/follow/<%= profileUser._id %>" method="POST" style="display:inline">
+              <button type="submit" class="<%= isFollowing ? 'btn-outline btn-unfollow' : 'btn' %>">
+                <%= isFollowing ? 'Following' : 'Follow' %>
+              </button>
+            </form>
+          <% } %>
+        </div>
+        <div class="profile-stats">
+          <div><strong><%= posts.length %></strong><span>posts</span></div>
+          <div><strong><%= profileUser.followers.length %></strong><span>followers</span></div>
+          <div><strong><%= profileUser.following.length %></strong><span>following</span></div>
+        </div>
+        <div class="profile-name"><%= profileUser.name %></div>
+        <div class="bio"><%= profileUser.bio || '' %></div>
+      </div>
+    </div>
+
+    <div class="profile-tabs">
+      <a href="#" class="profile-tab active">⊞ POSTS</a>
+    </div>
+
+    <div class="profile-posts-grid">
+      <% if (posts.length === 0) { %>
+        <div style="grid-column: 1/-1; text-align:center; padding:40px; color:#8e8e8e;">
+          <p style="font-size:24px; margin-bottom:8px;">📷</p>
+          <p style="font-weight:600; font-size:18px;">No Posts Yet</p>
+          <p style="font-size:14px;">Click + New Post to share your first photo.</p>
+        </div>
+      <% } %>
+      <% posts.forEach(function(post) { %>
+        <a href="/post/<%= post._id %>" class="grid-post">
+          <% if (post.image) { %>
+            <img src="<%= post.image %>" alt="">
+          <% } else if (post.mediaType === 'video') { %>
+            <video src="<%= post.video %>"></video>
+          <% } else { %>
+            <div class="text-post-thumb"><%= post.content.substring(0, 80) %></div>
+          <% } %>
+          <div class="grid-post-overlay">
+            <span>❤️ <%= post.likes.length %></span>
+          </div>
+        </a>
+      <% }); %>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal" id="editModal">
+    <div class="modal-box">
+      <div class="modal-header">Edit Profile</div>
+      <form action="/profile/edit" method="POST" enctype="multipart/form-data">
+
+        <!-- Photo Preview -->
+        <div style="text-align:center; margin-bottom:16px;">
+          <img id="photoPreview" src="<%= profileUser.profilePhoto %>"
+            style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid #efefef; margin-bottom:8px; display:block; margin:0 auto 8px;">
+          <label for="profilePhotoInput" style="color:#0095f6; font-size:13px; font-weight:600; cursor:pointer;">
+            Change Profile Photo
+          </label>
+          <input type="file" id="profilePhotoInput" name="profilePhoto" accept="image/*" style="display:none">
+        </div>
+
+        <input type="text" name="name" value="<%= profileUser.name %>" placeholder="Name">
+        <textarea name="bio" placeholder="Bio"><%= profileUser.bio %></textarea>
+        <button type="submit">Save Changes</button>
+        <button type="button" onclick="document.getElementById('editModal').style.display='none'" class="btn-cancel">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Live photo preview in modal
+    document.getElementById('profilePhotoInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('photoPreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+</body>
+</html>

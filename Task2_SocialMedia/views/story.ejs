@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Story</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body style="background:#000; min-height:100vh; display:flex; align-items:center; justify-content:center;">
+  <div class="story-viewer">
+    <div class="story-top">
+      <img src="<%= story.author.profilePhoto %>" class="avatar-sm">
+      <span style="color:#fff; font-weight:600; margin-left:10px;"><%= story.author.name %></span>
+      <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
+        <% if (story.author._id.toString() === currentUser._id.toString()) { %>
+          <form action="/story/<%= story._id %>/delete" method="POST">
+            <button type="submit" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;" title="Delete story">🗑️</button>
+          </form>
+        <% } %>
+        <a href="/" style="color:#fff; font-size:24px; text-decoration:none;">✕</a>
+      </div>
+    </div>
+    <img src="<%= story.image %>" class="story-img">
+    <div class="story-progress"></div>
+    <p style="color:#888; text-align:center; font-size:11px; margin-top:8px;">Stories disappear after 24 hours</p>
+  </div>
+
+  <script>
+    setTimeout(() => window.location.href = '/', 5000);
+  </script>
+</body>
+</html>

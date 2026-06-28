@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Post</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">✨ SocialApp</a>
+    <div class="nav-links">
+      <a href="/search">🔍</a>
+      <a href="/notifications">🔔</a>
+      <a href="/profile/<%= currentUser.username %>">👤 <%= currentUser.name %></a>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="single-post-container">
+    <a href="/" class="back-link">&larr; Back to feed</a>
+
+    <div class="post-card">
+      <div class="post-header">
+        <img src="<%= post.author.profilePhoto %>" class="avatar-sm">
+        <div>
+          <a href="/profile/<%= post.author.username %>" class="post-author"><%= post.author.name %></a>
+          <span class="post-username">@<%= post.author.username %></span>
+        </div>
+      </div>
+      <p class="post-content"><%= post.content %></p>
+      <% if (post.image) { %>
+        <img src="<%= post.image %>" class="post-image">
+      <% } %>
+      <div class="post-actions">
+        <form action="/post/<%= post._id %>/like" method="POST" style="display:inline">
+          <button type="submit" class="action-btn">
+            <% if (post.likes.includes(currentUser._id)) { %>❤️<% } else { %>🤍<% } %>
+            <%= post.likes.length %> Likes
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="comments-section">
+      <h3>Comments (<%= comments.length %>)</h3>
+      <form action="/post/<%= post._id %>/comment" method="POST" class="comment-form">
+        <img src="<%= currentUser.profilePhoto %>" class="avatar-sm">
+        <input type="text" name="content" placeholder="Write a comment..." required>
+        <button type="submit">Post</button>
+      </form>
+
+      <% comments.forEach(function(comment) { %>
+        <div class="comment-card">
+          <img src="<%= comment.author.profilePhoto %>" class="avatar-sm">
+          <div class="comment-body">
+            <a href="/profile/<%= comment.author.username %>" class="post-author"><%= comment.author.name %></a>
+            <p><%= comment.content %></p>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Search</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">✨ SocialApp</a>
+    <div class="nav-links">
+      <a href="/search">🔍</a>
+      <a href="/notifications">🔔</a>
+      <a href="/profile/<%= currentUser.username %>">👤 <%= currentUser.name %></a>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="search-container">
+    <h1>Search People</h1>
+    <form action="/search" method="GET" class="search-form">
+      <input type="text" name="q" value="<%= query %>" placeholder="Search by name or username..." autofocus>
+      <button type="submit">Search</button>
+    </form>
+
+    <% if (users.length === 0 && query) { %>
+      <p class="empty-msg">No users found for "<%= query %>"</p>
+    <% } %>
+
+    <div class="user-list">
+      <% users.forEach(function(user) { %>
+        <a href="/profile/<%= user.username %>" class="user-card">
+          <img src="<%= user.profilePhoto %>" class="avatar-sm">
+          <div>
+            <strong><%= user.name %></strong>
+            <span>@<%= user.username %></span>
+          </div>
+        </a>
+      <% }); %>
+    </div>
+  </div>
+</body>
+</html>
