@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProjectFlow</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/projects" class="logo">ProjectFlow</a>
+    <% if (currentUser) { %>
+      <div class="nav-right">
+        <a href="/notifications" class="bell" id="notifBell">
+          🔔 <span id="notifBadge" class="badge" style="display:none;">0</span>
+        </a>
+        <span class="nav-user"><%= currentUser.name %></span>
+        <a href="/logout" class="btn-small">Logout</a>
+      </div>
+    <% } %>
+  </nav>
+
+  <div class="container">
+    <% if (typeof success !== 'undefined' && success.length > 0) { %>
+      <div class="flash flash-success"><%= success[0] %></div>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error.length > 0) { %>
+      <div class="flash flash-error"><%= error[0] %></div>
+    <% } %>
+    <% if (currentUser) { %>
+    <script>
+      const currentUserId = "<%= currentUser._id %>";
+      socket.emit('joinUserRoom', currentUserId);
+
+      socket.on('newNotification', (data) => {
+        const badge = document.getElementById('notifBadge');
+        if (badge) {
+          badge.style.display = 'inline-block';
+          badge.textContent = (parseInt(badge.textContent) || 0) + 1;
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = data.message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+      });
+    </script>
+    <% } %>
+

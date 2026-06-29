@@ -1,0 +1,196 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h2><%= project.title %></h2>
+    <p class="muted"><%= project.description %></p>
+  </div>
+  <% if (currentUser && project.owner._id.toString() === currentUser._id.toString()) { %>
+    <form action="/projects/<%= project._id %>/delete" method="POST" id="deleteProjectForm">
+      <button type="submit" class="btn-small btn-danger">🗑 Delete Project</button>
+    </form>
+  <% } %>
+</div>
+
+<div class="members-bar">
+  <strong>Members:</strong>
+  <% project.members.forEach(m => { %>
+    <span class="member-chip"><%= m.name %></span>
+  <% }) %>
+
+  <form action="/projects/<%= project._id %>/members" method="POST" class="inline-form">
+    <input type="email" name="email" placeholder="Add member by email" required>
+    <button type="submit" class="btn-small">Add</button>
+  </form>
+</div>
+
+<form action="/projects/<%= project._id %>/tasks" method="POST" class="new-task-form">
+  <input type="text" name="title" placeholder="New task title" required>
+  <input type="text" name="description" placeholder="Description (optional)">
+  <select name="assignee">
+    <option value="">Unassigned</option>
+    <% allUsers.forEach(u => { %>
+      <option value="<%= u._id %>"><%= u.name %></option>
+    <% }) %>
+  </select>
+  <button type="submit" class="btn-primary">+ Add Task</button>
+</form>
+
+<div class="board" id="board" data-project-id="<%= project._id %>">
+  <div class="column" data-status="todo">
+    <h3>To Do</h3>
+    <div class="task-list" id="list-todo">
+      <% todoTasks.forEach(task => { %>
+        <%- include('../partials/taskCard', { task }) %>
+      <% }) %>
+    </div>
+  </div>
+
+  <div class="column" data-status="in-progress">
+    <h3>In Progress</h3>
+    <div class="task-list" id="list-in-progress">
+      <% inProgressTasks.forEach(task => { %>
+        <%- include('../partials/taskCard', { task }) %>
+      <% }) %>
+    </div>
+  </div>
+
+  <div class="column" data-status="done">
+    <h3>Done</h3>
+    <div class="task-list" id="list-done">
+      <% doneTasks.forEach(task => { %>
+        <%- include('../partials/taskCard', { task }) %>
+      <% }) %>
+    </div>
+  </div>
+</div>
+
+<!-- Comment modal -->
+<div id="commentModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <button id="closeModal" class="btn-small">Close</button>
+    <h3 id="modalTaskTitle"></h3>
+    <div id="commentList" class="comment-list"></div>
+    <form id="commentForm">
+      <input type="hidden" id="commentTaskId">
+      <input type="text" id="commentText" placeholder="Write a comment..." required>
+      <button type="submit" class="btn-primary">Send</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const projectId = document.getElementById('board').dataset.projectId;
+  socket.emit('joinProject', projectId);
+
+  // ---- Status change (dropdown-based, simple drag alternative) ----
+  document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', async (e) => {
+      const taskId = e.target.dataset.taskId;
+      const newStatus = e.target.value;
+      try {
+        const res = await fetch(`/tasks/${taskId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+          location.reload(); // refresh immediately so the card moves to the right column
+        } else {
+          alert('Could not update task status. Please try again.');
+        }
+      } catch (err) {
+        alert('Could not update task status. Please check your connection.');
+      }
+    });
+  });
+
+  // ---- Delete task ----
+  document.querySelectorAll('.delete-task-form').forEach(form => {
+    form.addEventListener('submit', (e) => {
+      if (!confirm('Delete this task?')) e.preventDefault();
+    });
+  });
+
+  // ---- Delete project ----
+  const deleteProjectForm = document.getElementById('deleteProjectForm');
+  if (deleteProjectForm) {
+    deleteProjectForm.addEventListener('submit', (e) => {
+      if (!confirm('Delete this entire project? This will also delete all its tasks and comments. This cannot be undone.')) {
+        e.preventDefault();
+      }
+    });
+  }
+
+  // ---- Open comment modal ----
+  document.querySelectorAll('.open-comments').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const taskId = btn.dataset.taskId;
+      const taskTitle = btn.dataset.taskTitle;
+      document.getElementById('commentTaskId').value = taskId;
+      document.getElementById('modalTaskTitle').textContent = taskTitle;
+      document.getElementById('commentModal').style.display = 'flex';
+
+      const res = await fetch(`/tasks/${taskId}/comments`);
+      const data = await res.json();
+      renderComments(data.comments);
+    });
+  });
+
+  document.getElementById('closeModal').addEventListener('click', () => {
+    document.getElementById('commentModal').style.display = 'none';
+  });
+
+  function renderComments(comments) {
+    const list = document.getElementById('commentList');
+    list.innerHTML = '';
+    comments.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'comment-item';
+      div.innerHTML = `<strong>${c.author.name}:</strong> ${c.text}`;
+      list.appendChild(div);
+    });
+  }
+
+  // ---- Submit comment via fetch, then let socket update the modal live ----
+  document.getElementById('commentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const taskId = document.getElementById('commentTaskId').value;
+    const text = document.getElementById('commentText').value;
+
+    await fetch(`/tasks/${taskId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `text=${encodeURIComponent(text)}`
+    });
+
+    document.getElementById('commentText').value = '';
+  });
+
+  // ---- SOCKET LISTENERS: live board updates for everyone viewing this project ----
+  socket.on('taskCreated', (task) => {
+    location.reload(); // simplest reliable way for a beginner-friendly project
+  });
+
+  socket.on('taskUpdated', (task) => {
+    location.reload();
+  });
+
+  socket.on('taskDeleted', () => {
+    location.reload();
+  });
+
+  socket.on('commentAdded', (data) => {
+    const openTaskId = document.getElementById('commentTaskId').value;
+    if (data.taskId === openTaskId) {
+      const list = document.getElementById('commentList');
+      const div = document.createElement('div');
+      div.className = 'comment-item';
+      div.innerHTML = `<strong>${data.comment.author.name}:</strong> ${data.comment.text}`;
+      list.appendChild(div);
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

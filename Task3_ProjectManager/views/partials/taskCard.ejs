@@ -1,0 +1,30 @@
+<div class="task-card">
+  <h4><%= task.title %></h4>
+  <% if (task.description) { %>
+    <p class="task-desc"><%= task.description %></p>
+  <% } %>
+
+  <div class="task-meta">
+    <span class="assignee-tag">
+      <% if (task.assignee) { %>
+        👤 <%= task.assignee.name %>
+      <% } else { %>
+        Unassigned
+      <% } %>
+    </span>
+  </div>
+
+  <div class="task-actions">
+    <select class="status-select" data-task-id="<%= task._id %>">
+      <option value="todo" <%= task.status === 'todo' ? 'selected' : '' %>>To Do</option>
+      <option value="in-progress" <%= task.status === 'in-progress' ? 'selected' : '' %>>In Progress</option>
+      <option value="done" <%= task.status === 'done' ? 'selected' : '' %>>Done</option>
+    </select>
+
+    <button class="btn-small open-comments" data-task-id="<%= task._id %>" data-task-title="<%= task.title %>">💬</button>
+
+    <form action="/tasks/<%= task._id %>/delete" method="POST" class="delete-task-form">
+      <button type="submit" class="btn-small btn-danger">🗑</button>
+    </form>
+  </div>
+</div>

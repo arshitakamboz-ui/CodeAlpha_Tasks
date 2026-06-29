@@ -1,0 +1,38 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <h2>Your Projects</h2>
+  <a href="/projects/new" class="btn-primary">+ New Project</a>
+</div>
+
+<div class="project-grid">
+  <% if (projects.length === 0) { %>
+    <p class="empty-state">No projects yet. Create your first one!</p>
+  <% } %>
+  <% projects.forEach(project => { %>
+    <div class="project-card-wrapper">
+      <a href="/projects/<%= project._id %>" class="project-card">
+        <h3><%= project.title %></h3>
+        <p><%= project.description || 'No description' %></p>
+        <span class="owner-tag">Owner: <%= project.owner.name %></span>
+      </a>
+      <% if (currentUser && project.owner._id.toString() === currentUser._id.toString()) { %>
+        <form action="/projects/<%= project._id %>/delete" method="POST" class="delete-project-form">
+          <button type="submit" class="btn-small btn-danger">🗑 Delete</button>
+        </form>
+      <% } %>
+    </div>
+  <% }) %>
+</div>
+
+<script>
+  document.querySelectorAll('.delete-project-form').forEach(form => {
+    form.addEventListener('submit', (e) => {
+      if (!confirm('Delete this project? This will also delete all its tasks and comments. This cannot be undone.')) {
+        e.preventDefault();
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,17 @@
+<%- include('partials/header') %>
+
+<h2>Notifications</h2>
+
+<div class="notif-list">
+  <% if (notifications.length === 0) { %>
+    <p class="empty-state">No notifications yet.</p>
+  <% } %>
+  <% notifications.forEach(n => { %>
+    <a href="<%= n.link %>" class="notif-item <%= n.read ? '' : 'unread' %>">
+      <%= n.message %>
+      <span class="notif-time"><%= n.createdAt.toLocaleString() %></span>
+    </a>
+  <% }) %>
+</div>
+
+<%- include('partials/footer') %>
