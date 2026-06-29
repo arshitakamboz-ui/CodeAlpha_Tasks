@@ -16,7 +16,7 @@ const Story = require('./models/Story');
 const app = express();
 const PORT = 3000;
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://a4155361_db_user:nHcxglrqTbay6MeO@cluster0.ut9jfrv.mongodb.net/socialmedia?appName=Cluster0')
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 

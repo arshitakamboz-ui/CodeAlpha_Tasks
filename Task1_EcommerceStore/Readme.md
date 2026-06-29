@@ -55,7 +55,7 @@ A full-stack e-commerce web application built as part of my **CodeAlpha Web Deve
 
 3.  Add your MongoDB connection string as environment variable
 
-        MONGODB_URI=mongodb+srv://a4155361_db_user:nHcxglrqTbay6MeO@cluster0.ut9jfrv.mongodb.net/?appName=Cluster0
+        MONGODB_URI=mongodb+srv://<your_username>:<your_password>@<your_cluster>.mongodb.net/socialmedia?appName=Cluster0
 
 4.  Seed the database
 
@@ -71,7 +71,7 @@ A full-stack e-commerce web application built as part of my **CodeAlpha Web Deve
 
 ## 👩‍💻 Author
 
-**Arshita** — CodeAlpha Web Development Intern
+**Arshita Kamboj** — CodeAlpha Web Development Intern
 
 GitHub: https://github.com/arshitakamboz-ui
 
